@@ -1,0 +1,11 @@
+[default]
+name=Default
+runtime=host
+toolchain=gcc:/usr/lib64/ccache/x86_64-redhat-linux-gcc
+config-opts=
+run-opts=
+prefix=/home/giorcocc/.cache/gnome-builder/install/Esercitazione2/host
+app-id=
+postbuild=
+prebuild=
+default=true
