@@ -1,21 +1,31 @@
-#include <sys/stat.h>
-#include <sys/stat.h>
+#include <sys/stat.h>//necessario per la systemcall fstat()
 #include <fcntl.h>
 #include <stdio.h>
+#include<stdlib.h>
 #include <time.h>
-#include <unistd.h>
+#include <unistd.h>//necessario per la systemcall fstat()
 
+//utilizzo della systemcall fstat()
+// int fstat(int filedes, struct stat *buf);
 
+// TODO: controllare che la richiesta della consegna sia stata rispettata (non capisco la consegna appieno)
 
-int main(void)
+int main(int argc, char **argv)
 {
   struct stat statbuf;
   int file;
 
-  /* apre il file test.dat dell'esercizio 4 */
-  file = open("test.dat", O_RDONLY);
-  if (file == -1)
+  if(argc!=2){
+    perror("Inserire il percorso del file come secondo argomento");
+    exit(0);
+  }
+
+  /* apre il file passato come argomento */
+  file = open(argv[1], O_RDONLY);
+  if (file == -1){
     perror("file opening error");
+    exit(-1);
+  }
 
   /* ottiene informazioni sul file */
   fstat(file, &statbuf);

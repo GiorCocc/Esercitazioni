@@ -1,14 +1,19 @@
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <sys/types.h>  //necessario per la system call open()
+#include <sys/stat.h> //necessario per la system call open()
+#include <unistd.h> //necessario per la system call close()
+#include <fcntl.h>  //necessario per la system call open()
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
 #define perm 0744
 #define N 2048
+
+//utilizzo della system call open() e close()
+//int open(const char *pathname, int flags);
+//int open(const char *pathname, int flags, mode_t mode);
+//int close(int fd);
 
 int main(int argc, char **argv)
 {
