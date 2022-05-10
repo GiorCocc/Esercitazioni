@@ -1,6 +1,7 @@
 #include <unistd.h>
 #include <stdio.h>
 
+//utilizzo dela systemcall link()
 
 int main()
 {
