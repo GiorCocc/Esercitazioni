@@ -1,12 +1,12 @@
-#include <sys/stat.h>//necessario per la systemcall fstat()
+#include <sys/stat.h> //necessario per la systemcall fstat()
 #include <fcntl.h>
 #include <stdio.h>
-#include<stdlib.h>
+#include <stdlib.h>
 #include <time.h>
-#include <unistd.h>//necessario per la systemcall fstat()
+#include <unistd.h> //necessario per la systemcall fstat()
 
-//utilizzo della systemcall fstat()
-// int fstat(int filedes, struct stat *buf);
+// utilizzo della systemcall fstat()
+//  int fstat(int filedes, struct stat *buf);
 
 // TODO: controllare che la richiesta della consegna sia stata rispettata (non capisco la consegna appieno)
 
@@ -15,14 +15,16 @@ int main(int argc, char **argv)
   struct stat statbuf;
   int file;
 
-  if(argc!=2){
+  if (argc != 2)
+  {
     perror("Inserire il percorso del file come secondo argomento");
     exit(0);
   }
 
   /* apre il file passato come argomento */
   file = open(argv[1], O_RDONLY);
-  if (file == -1){
+  if (file == -1)
+  {
     perror("file opening error");
     exit(-1);
   }
@@ -32,7 +34,7 @@ int main(int argc, char **argv)
   close(file);
 
   /* mostra le informazioni ottenute */
-  if (statbuf.st_mode & S_IFCHR) 
+  if (statbuf.st_mode & S_IFCHR)
     printf("Handle refers to a device.\n");
   if (statbuf.st_mode & S_IFREG)
     printf("Handle refers to an ordinary file.\n");
