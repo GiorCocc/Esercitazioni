@@ -12,9 +12,10 @@
 
 int main(int argc, char **argv)
 {
-  struct stat statbuf;
-  int file;
+  struct stat statbuf; // struttura per la systemcall fstat()
+  int file;            // file descriptor del file di input
 
+  // controllo il numero di argomenti
   if (argc != 2)
   {
     perror("Inserire il percorso del file come secondo argomento");
@@ -23,15 +24,15 @@ int main(int argc, char **argv)
 
   /* apre il file passato come argomento */
   file = open(argv[1], O_RDONLY);
+  // controllo di apertura del file di input
   if (file == -1)
   {
     perror("file opening error");
     exit(-1);
   }
 
-  /* ottiene informazioni sul file */
-  fstat(file, &statbuf);
-  close(file);
+  fstat(file, &statbuf); // ottiene informazioni sul file
+  close(file);           // chiude il file di input
 
   /* mostra le informazioni ottenute */
   if (statbuf.st_mode & S_IFCHR)

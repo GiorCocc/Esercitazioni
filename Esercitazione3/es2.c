@@ -1,6 +1,6 @@
-#include <unistd.h> //contiene la systemcall
+#include <unistd.h> // contiene la systemcall read()
 #include <stdio.h>
-#include <ctype.h> //include isupper() e tolower()
+#include <ctype.h> // include isupper() e tolower()
 
 #define N 256 // dimensione massima di elementi leggibili
 
@@ -9,10 +9,10 @@
 
 int main()
 {
-  char buffer[N];
-  int nread; // numero di caratteri letti
+  char buffer[N]; // buffer
+  int nread;      // numero di caratteri letti
 
-  nread = read(0, buffer, N);
+  nread = read(0, buffer, N); // leggo dalla standard input (console)
 
   // impossibile leggere dal buffer
   if (nread == -1)
@@ -21,9 +21,9 @@ int main()
   // lettura del buffer e conversione da MAIUSCOLO a minuscolo
   for (int i = 0; i < nread; i++)
   {
-    if (isupper(buffer[i]))
+    if (isupper(buffer[i])) // controllo se il carattere è maiuscolo
     {
-      buffer[i] = tolower(buffer[i]);
+      buffer[i] = tolower(buffer[i]); // converto in minuscolo e salvo nel buffer
     }
   }
 

@@ -17,9 +17,10 @@
 
 int main(int argc, char **argv)
 {
-  int infile, outfile, nread;
-  char buffer[N];
+  int infile, outfile, nread; // file descriptor dei file di input e output e numero di byte letti
+  char buffer[N];             // buffer per la lettura del file di input
 
+  // controllo il numero di argomenti
   if (argc != 3)
   {
     fprintf(stderr, "Uso: %s nomefilesorgente nomefiledestinazione\n", argv[0]);
@@ -28,23 +29,25 @@ int main(int argc, char **argv)
 
   /* Aggiungere i controlli di errore nell'invocazione delle seguenti system call */
 
-  infile = open(argv[1], O_RDONLY);
+  infile = open(argv[1], O_RDONLY); // apertura del file di input
 
+  // controllo di apertura del file di input
   if (infile < 0)
     perror("Errore nell'apertura!");
 
-  outfile = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, perm);
+  outfile = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, perm); // apertura del file di output in modalità perm
 
+  // controllo di apertura del file di output
   if (nread >= 0)
-    while ((nread = read(infile, buffer, N)) > 0)
-      write(outfile, buffer, nread);
+    while ((nread = read(infile, buffer, N)) > 0) // lettura del file di input
+      write(outfile, buffer, nread);              // scrittura del file di output del numero di byte letti
   else
     perror("Errore sul valore di nread");
 
-  printf("Copia del file %s eseguita con successo in %s\n", argv[1], argv[2]);
+  printf("Copia del file %s eseguita con successo in %s\n", argv[1], argv[2]); // messaggio di conferma della copia
 
-  close(infile);
-  close(outfile);
+  close(infile);  // chiusura del file di input
+  close(outfile); // chiusura del file di output
 
   return 0;
 }
