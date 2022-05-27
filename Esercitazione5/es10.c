@@ -17,7 +17,7 @@ void handler(int signo)
   printf("Sono il processo %d e ho ricevuto il segnale %d\n", getpid(), signo);
 }
 
-// TODO: sistemare la funzione e il suo comportamento 
+// TODO: sistemare la funzione e il suo comportamento. Ottengo come output: "Segnale 1 definito dall'utente"
 void body_proc(int id, char arg1)
 {
   // se argv1=='a' ogni processo figlio con id pari manda un segnale (SIGUSR1) al processo id+1
@@ -56,6 +56,13 @@ int main(int argc, char *argv[])
     perror("pipe error");
     exit(-1);
   }
+
+  if (argc!=2)
+  {
+    printf("Usage: %s <arg1>\n", argv[0]);
+    exit(-1);
+  }
+
   arg1 = argv[1][0]; // primo carattere del secondo argomento
 
   for (i = 0; i < N; i++) // crea N processi figli
