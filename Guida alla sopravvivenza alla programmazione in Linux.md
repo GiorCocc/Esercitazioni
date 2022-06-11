@@ -631,10 +631,58 @@ La maschera passata come parametro alla `sigsuspend` indica infatti quali segnal
 
 > NOTA: Se sono presenti segnali pendenti, bloccati dalla precedente `sigprocmask`, la `sigsuspend(&zeromask)` li sblocca e ritorna immediatamente dopo l'esecuzione dei gestori.
 
-Riassunmento, si eseguono i seguenti comandi per garantire una gestione affidabile dei segnali:
+Riassumendo, si eseguono i seguenti comandi per garantire una gestione affidabile dei segnali:
 
 ```c
-
+#include <signal.h>
+#include <unistd.h>
+void catcher(int signo)
+{
+static int ntimes = 0;
+printf("Processo %d: SIGUSR1 ricevuto #%d volte\n",getpid(),++ntimes);
+}
+int main()
+{
+    int pid, ppid;
+    struct sigaction sig, osig;
+    sigset_t sigmask, oldmask, zeromask;
+    
+    sig.sa_handler= catcher;	//assegnamento della funzione per la gestione del segnale
+    sigemptyset(&sig.sa_mask);	//preparazione di una maschera vuota
+    sig.sa_flags= 0;	//impostazione dei flags a 0
+    sigemptyset(&zeromask);	//preparazione di una maschera vuota
+    sigemptyset(&sigmask);	//preparazione di una maschera vuota
+    sigaddset(&sigmask, SIGUSR1); //aggiunta alla maschera del segnale da notificare
+    sigprocmask(SIG_BLOCK, &sigmask, &oldmask);	//maschera di blocco dei segnali
+    sigaction(SIGUSR1, &sig, &osig); /* il figlio la ereditera' */
+    
+    if ((pid=fork()) < 0) {
+        perror("fork error");
+        exit(1);
+    }
+    else
+    	if (pid == 0) {
+   			/* Processo figlio */
+    		ppid = getppid();
+    		printf("figlio: mio padre e' %d\n", ppid);
+    		while(1) {
+    			sleep(1);
+    			kill(ppid, SIGUSR1);	//invio dei segnale
+    			/* Sblocca il segnale SIGUSR1 e lo attende */
+    			sigsuspend(&zeromask);	//sospensione con maschera vuota
+    		}
+    	}
+    	else {
+    		/* Processo padre */
+    		printf("padre: mio figlio e' %d\n", pid);
+    		while(1) {
+    			/* Sblocca il segnale SIGUSR1 e lo attende */
+    			sigsuspend(&zeromask); //sospensione con maschera vuota
+    			sleep(1);
+    			kill(pid, SIGUSR1); //invio del segnale
+			}
+		}
+}
 ```
 
 ---
@@ -662,6 +710,20 @@ Per convenzione le pipe vengono di norma utilizzate come canali di comunicazione
 flessibili e meno ortodossi, prevedendo anche scrittori ed eventualmente lettori
 multipli sulla stessa pipe.
 
+#### Lettura e scrittura su pipe
+
+Le funzioni `read()` e `write()` sono solitamente da svolgere tra processi padre e figlio.
+
+```c
+// Lettura su pipe
+close(pipe[1]); 	//chiusura del file descriptor di scrittura della pipe
+read(pipe[0], &buff, sizeof (int));	//lettura dal file descriptor 0 della pipe e inserimento del valore in buf
+
+// Scrittura su pipe
+close(pipe[0]); 	//chiusura del file descriptor di lettura della pipe
+write(pipe[1], &buff, sizeof (int));	//scrittura dal file descriptor 0 della pipe e inserimento del valore in buf
+```
+
 Per maggiori informazioni vedere [man 7 pipe](https://man7.org/linux/man-pages/man7/pipe.7.html).
 
 ---
@@ -688,66 +750,382 @@ Per maggiori informazioni vedere [man 3 mkfifo](https://man7.org/linux/man-pages
 
 ## 6. Socket
 
+Una socket fornisce una interfaccia di comunicazione tra processi che possono essere locali oppure trovarsi su nodi distinti di una rete. In generale ogni socket è identificata da un indirizzo, che nel caso specifico di socket create nel dominio di comunicazione AF_INET è una coppia (indirizzo IP del nodo, numero di porta).
+
+Per l'esecuzione del server e del client (che devono essere scritti su due file `.c` differenti) eseguire il comando da terminale:
+
+```bash
+./server <numero porta> <argomenti>
+./client <argomenti> localhost <numero porta>
+```
+
+con `numero porta` un valore molto grande (sopra il 10000 va bene). Se si è creato solo un file `server` si può utilizzare un client di test, invocando da tastiera:
+
+```bash
+telnet localhost <numero porta>
+```
+
+
+
 ### `socket`
 
-```
+```c
 #include <sys/types.h>
 #include <sys/socket.h>
+
 int socket(int domain, int type, int protocol)
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `domain`: dominio di funzionamento della socket. I domini principali sono:
+  - `PD_UNIX` dominio per una comunicazione locale
+  - `PF_INET` dominio per una comunicazione su TCP/IP (IPv4)
+  - `PF_INET6` dominio per una comunicazione su TCP/IP (IPv6)
+- `type`: tipologia di socket da creare. Può essere uno tra:
+  - `SOCK_STREAM` per il trasferimento di stream di byte
+  - `SOCK_DGRAM` per il trasferimento di datagram
+- `protocol`: protocollo di funzionamento (se nel dominio è presente un solo protocollo, allora questo campo è messo a `0`)
+
+Il valore di ritorno della funzione `socket()` è un valore intero che specifica la socket creata.
+
+Per maggiori informazioni vedere [man 7 socket](https://man7.org/linux/man-pages/man7/socket.7.html).
 
 ### `bind`
 
-```
+```c
 int bind(int sockd,struct sockaddr* my_addr_p,int addrlen)
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `sockd`: intero che identifica la socket
+- `my_addr_p`: contiene il nome (indirizzo) da assegnare alla socket. Al suo interno si trova l'indirizzo IP del nodo e il numero della porta
+- `addrlen`: lunghezza dell'indirizzo specificato
+
+Nel dominio `AF_INET` le strutture dati utilizzate da bind e dalle altre primitive sono:
+
+```c
+struct sockaddr_in {
+    sa_family_t sin_family; 	/* address family: AF_INET */
+    u_int16_t sin_port; 		/* port in network byte order */
+    struct in_addr sin_addr; 	/* internet address */
+};
+```
+
+La funzione `bind()` assegna un nome alla socket creata.
+
+Per maggiori informazioni vedere [man 2 bind](https://man7.org/linux/man-pages/man2/bind.2.html).
 
 ### `listen`
 
-```
+```c
 int listen(int sockfd,int backlog)
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `sockfd`: intero che identifica la socket
+- `backlog`: numero massimo di connessioni pendenti
+
+La funzione `liste()` specifica il numero massimo di connessioni pendenti per la socket, ovvero il numero massimo di richieste che può soddisfare.
+
+Per maggiori informazioni vedere [man 2 listen](https://man7.org/linux/man-pages/man2/listen.2.html).
 
 ### `accept`
 
-```
+```c
 int accept(int sockfd,struct sockaddr* addr_p,int* len_p)
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `sokfd`: intero che indica la socket
+- `addr_p`: indirizzo in cui verrà memorizzata una struttura che contiene il nome/indirizzo della socket client che effettua la connessione
+- `len_p`: dimensione di `addr_p`
+
+La chiamata alla funzione `accept()` accetta la connessione da parte di una socket client. Il valore di ritorno della funzione è il file descriptor da utilizzare nel server
+
+Per maggiori informazioni vedere [man 2 accept](https://man7.org/linux/man-pages/man2/accept.2.html).
 
 ### `connect`
 
-```
+```c
 int connect(int sockfd,struct sockaddr* addr_p,int len)
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `sokfd`: intero che indica la socket client
+- `addr_p`: indirizzo in cui verrà memorizzata una struttura che contiene il nome/indirizzo della socket server
+- `len_p`: dimensione di `addr_p`
+
+Per maggiori informazioni vedere [man 2 connect](https://man7.org/linux/man-pages/man2/connect.2.html).
 
 ### `close`
 
-```
+```c
 close(sock);
 ```
 
-Per maggiori informazioni vedere []().
+Il protocollo TCP attende un tempo tra 1 e 4 minuti (nello stato `TIME_WAIT`) prima di rimuoverla effettivamente, al fine di assicurarsi che eventuali
+pacchetti duplicati vaganti siano consegnati al destinatario. In alcuni casi questo ritardo può essere evitabile senza conseguenze, come nel caso del debug di un server che deve essere frequentemente terminato e rieseguito. A questo scopo si utilizza la `setsockopt` per forzare il riuso dell'indirizzo nel `bind` che quindi non fallirà anche in presenza di una socket in fase di chiusura e avente lo stesso indirizzo:
+
+```c
+int on = 1;
+ret = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+. . .
+bind(. . .);
+```
+
+Per maggiori informazioni vedere [man 2 close](https://man7.org/linux/man-pages/man2/close.2.html).
 
 ### `select`
 
-```
+```c
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
 ```
 
-Per maggiori informazioni vedere []().
+Dove:
+
+- `n`: valore del descrittore più alto nei tre insiemi
+- `readfds`: insieme dei file descriptor di lettura
+- `writefds`: insieme dei file descriptor di scrittura
+- `exceptdfs`: insieme dei file descriptor di eccezioni
+- `timeout`: limite di tempo superiore per l'attesa
+
+La funzione `select()` permette di attendere una variazione di stato per i file descriptor contenuti nei 3 insiemi `readfds`, `writefds` e `exceptfds`. Il valore di ritorno della funzione è il numero di descrittori che sono variati di stato:
+
+Macro utili per la manipolazioni delle variabili `fd_set`:
+
+```c
+FD_ZERO(fd_set *set) 				//azzera un fd_set
+FD_CLR(int fd, fd_set *set) 		//rimuove un fd da un fd_set
+FD_SET(int fd, fd_set *set) 		//inserisce un fd in un fd_set
+FD_ISSET(int fd, fd_set *set) 		//predicato che verifica se un certo fd è membro di un fd_set
+```
+
+Per maggiori informazioni vedere [man 2 select](https://man7.org/linux/man-pages/man2/select.2.html).
 
 ### SERVER CONCORRENTI
+
+Nella risoluzione degli esercizi è obbligatoria la creazione di un server concorrente, ovvero un server in cui le richieste di connessione e le operazioni da eseguire sono gestite da un processo figlio. Qui sotto uno schema con tutto l'occorrente per la realizzazione di un server di tipo concorrente:
+
+```c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <sys/timeb.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+#include "ftpdefines.h"
+
+char buf[BYTES_NR];
+main()
+{
+    int sock,length;
+    struct sockaddr_in server,client;
+    char buff[512];
+    int s,msgsock,rval,rval2,i;
+    struct hostent *hp,*gethostbyname();
+    
+    /* Crea la socket STREAM */
+    sock= socket(AF_INET,SOCK_STREAM,0);
+    if(sock<0)
+    { 
+    	perror("opening stream socket");
+    	exit(1);
+    }
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr= INADDR_ANY;
+    server.sin_port = htons(1520);
+    
+    if (bind(sock,(struct sockaddr *)&server,sizeof server)<0)
+    {
+    	perror("binding stream socket");
+    	exit(2);
+    }
+    length= sizeof server;
+    
+    if(getsockname(sock,(struct sockaddr *)&server,&length)<0)
+    {
+    	perror("getting socket name");
+    	exit(3);
+    }
+    
+    printf("Socket port #%d\n",ntohs(server.sin_port));
+    
+    /* Pronto ad accettare connessioni */
+    listen(sock,2);
+    
+    do {
+    /* Attesa di una connessione */
+    	msgsock= accept(sock,(struct sockaddr *)&client,(int *)&length);
+    	if(msgsock ==-1)
+    	{ 
+            perror("accept"); 
+            exit(4);
+    	}
+    	else
+    	{// SERVER CONCORRENTE
+    		if(fork()==0) {
+    			printf("Serving connection from %s, port %d\n",
+    			inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+    			close(sock);
+    			ftpserv(msgsock);
+    			close(msgsock);
+    			exit(0);
+    		}
+    		else
+    			close(msgsock);
+    	}
+    } while(1);
+}
+
+ftpserv(int sock)
+{
+    int s,rval,nread, fd;
+    struct stat fbuf;
+    RICHIESTA_MSG rich_mesg;
+    RISPOSTA_MSG risp_mesg;
+    s = 0;
+    /* Ricezione del comando GET */
+    if((rval=read(sock,&rich_mesg,sizeof(RICHIESTA_MSG)))<0)
+    {
+        perror("reading client request");
+        exit(-1); 
+    }
+    
+    if((fd= open(rich_mesg.filename,O_RDONLY))<0)
+    { 
+        fprintf(stderr,"Non riesco ad aprire il file %s (%s)...uscita
+   !\n",rich_mesg.filename,strerror(errno));
+    	risp_mesg.result = -1;
+    	strcpy(risp_mesg.errmsg,strerror(errno));
+    }
+    else {
+    	risp_mesg.result= 0;
+    	fstat(fd,&fbuf); /* Ottiene la dimensione del file */
+    	risp_mesg.filesize= fbuf.st_size;
+    }
+    /* Invio della risposta */
+    if((rval = write(sock,&risp_mesg,sizeof(RISPOSTA_MSG)))<0)
+    	perror("writing on stream socket");
+    if(risp_mesg.result != 0) return -1;
+    	do {
+    		if((nread = read(fd,buf,sizeof buf))<0)
+    			perror("reading from file");
+    		if (nread >0)
+    			if((rval = write(sock,buf,nread))<0)
+    				perror("writing on stream socket");
+    	} while(nread > 0);
+}
+```
+
+Qui invece un esempio di client concorrente:
+
+```c
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/timeb.h>
+#include <fcntl.h>
+#include "ftpdefines.h"
+
+struct protoent *pp;
+char buf[BYTES_NR];
+
+main(argc,argv)
+int argc;char *argv[];
+{
+    int i,s,fd,sock,rval,rval2;
+    struct sockaddr_in server;
+    struct hostent *hp,*gethostbyname();
+    char copiafilename[RICHMSG_MAXPATHNAME+16];
+    RICHIESTA_MSG rich_mesg;
+    RISPOSTA_MSG risp_mesg;
+    
+    if(argc != 4) {
+    	fprintf(stderr,"Uso: %s servername porta nomefile\n\n",argv[0]);
+    	exit(-1);
+    }
+    /* Crea una socket di tipo STREAM per il dominio TCP/IP */
+    sock= socket(AF_INET,SOCK_STREAM,0);
+    if(sock<0)
+    {
+    	perror("opening stream socket");
+    	exit(1);
+    }
+        /* Ottiene l'indirizzo del server */
+    server.sin_family= AF_INET;
+    hp= gethostbyname(argv[1]);
+    
+    if(hp==0){
+    	fprintf(stderr,"%s: unknown host",argv[1]);
+    	exit(2);
+    }
+    memcpy( (char *)&server.sin_addr, (char *)hp->h_addr ,hp->h_length);
+    /* La porta e' sulla linea di comando */
+    server.sin_port= htons(atoi(argv[2]));
+    /* Tenta di realizzare la connessione */
+    printf("Connecting to the server %s...\n",argv[1]);
+    
+    if(connect(sock,(struct sockaddr *)&server,sizeof server) <0)
+    {
+        perror("connecting stream socket");
+        exit(3);
+    }
+    printf("Connected to the server.\n");
+    strncpy(rich_mesg.filename,argv[3],RICHMSG_MAXPATHNAME);
+    /* Invio comando RICHIESTA (GET) */
+    write(sock,&rich_mesg,sizeof(RICHIESTA_MSG));
+    
+    /* Riceve la RISPOSTA dal server */
+    if((rval = read(sock,&risp_mesg,sizeof(RISPOSTA_MSG)))<0)
+    	perror("reading server answer");
+    if(risp_mesg.result !=0) {
+    	fprintf(stderr,"OOPS il server risponde %d (%s)...uscita!\n",risp_mesg.result,risp_mesg.errmsg);
+    	close(sock);
+    	exit(0);
+    }
+                
+    strcpy(copiafilename,"copia.");
+    strcat(copiafilename, rich_mesg.filename);
+    if((fd= open(copiafilename,O_WRONLY|O_CREAT|O_TRUNC,0644))<0) {
+    	fprintf(stderr,"Non posso aprire il file copia %s ...uscita!\n",copiafilename);
+    	close(sock);
+        exit(0);
+    }
+                
+    s=0;
+                
+    do{
+    	if((rval = read(sock,buf,sizeof buf))<0)
+    		perror("reading stream message");
+    	if(rval >0)
+    	{
+    		write(fd,buf,rval);
+    		putchar('.');
+    		s += rval;
+    	}
+    }while(rval !=0);
+                
+    printf("\nTrasferimento completato di %s completato - ricevuti %d byte (dimensione sul server %d\n",rich_mesg.filename,s, risp_mesg.filesize);
+    close(sock);
+    close(fd);
+    exit(0);
+}
+```
 
