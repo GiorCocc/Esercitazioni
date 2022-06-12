@@ -6,7 +6,7 @@
 
 ## 0. Introduzione
 
-Questa non vuole essere una guida alla programmazione in Linux. Si tratta di una guida alla sopravvivenza, con piccoli tips e un ripasso delle principali system call. 
+Questa non vuole essere una guida alla programmazione in Linux. Si tratta di una guida alla sopravvivenza, con piccoli tips e un ripasso delle principali system call.
 
 Si consiglia comunque di navigare sulla pagina `man` da terminale (oppure sul sito [man7.org](https://www.kernel.org/doc/man-pages/)) specificando la voce alla quale si è interessati, in modo da comprendere appieno tutte le caratteristiche dei comandi.
 
@@ -18,58 +18,57 @@ Dallo Shell, utilizzare `gcc` nel seguente modo:
 gcc -o <nome del file eseguibile> <nome file sorgente.c>
 ```
 
-L'opzione `-o` seguita da `<nome del file eseguibile>` comunica a `gcc` che deve creare un le eseguibile chiamato `<nome del file eseguibile>`. Ad esempio, se dalla shell si digita il comando `gcc -o hello hello.c`, il file sorgente `hello.c` verrà compilato e il file eseguibile sarà chiamato `hello`. Se non si scrive `-o filename`, il compilatore `gcc` crea un eseguibile chiamato `a.out`.
+L'opzione `-o` seguita da `<nome del file eseguibile>` comunica a `gcc` che deve creare un file eseguibile chiamato `<nome del file eseguibile>`. Ad esempio, se dalla shell si digita il comando `gcc -o hello hello.c`, il file sorgente `hello.c` verrà compilato e il file eseguibile sarà chiamato `hello`. Se non si scrive `-o filename`, il compilatore `gcc` crea un eseguibile chiamato `a.out`.
 
-L'esecuzione di un programma da shell prevede la seguente sintassi: 
+L'esecuzione di un programma da shell prevede la seguente sintassi:
 
 ```bash
 ./<nome eseguibile> [lista argomenti invocazione]
 ```
 
-In generale, la sintassi del comando `gcc` è: `gcc <opzioni> <filename>`
+In generale, la sintassi del comando `gcc` è: `gcc <opzioni> <filename>`
 Oltre a `-o`, le opzioni più comuni sono:
 
-- `-c` per creare il file oggetto anziché l'eseguibile: `gcc -c hello.c` genera il file oggetto `hello.o`
+- `-c` per creare il file oggetto anziché l'eseguibile: `gcc -c hello.c` genera il file oggetto `hello.o`
 - `-Wall` genera tutti i messaggi di warning che `gcc` può fornire
 - `-pedantic` mostra tutti gli errori e i warning richiesti dallo standard ANSI C
-- `-O -O1 -O2 -O3` servono per definire il livello di ottimizzazione (dal più basso al più alto)
+- `-O -O1 -O2 -O3` servono per definire il livello di ottimizzazione (dal più basso al più alto)
 - `-O0` per non avere nessuna ottimizzazione
 - `-g` per un successivo debugging
 
-Per creare l'eseguibile a partire dal file oggetto: `gcc hello.o -o hello`
+Per creare l'eseguibile a partire dal file oggetto: `gcc hello.o -o hello`
 Quest'ultima operazione prende il nome di **linking**, che in generale consiste nella risoluzione dei simboli tra programmi e l'inclusione di eventuali librerie.
 
 ### Strace
 
-Il programma `strace` consente di visualizzare le system call (con i relativi argomenti) invocate da un processo in esecuzione. È uno strumento di debug molto istruttivo che permette di ottenere, in tempo reale su schermo o in un file di testo, numerose informazioni sull'esecuzione di un programma.
+Il programma `strace` consente di visualizzare le system call (con i relativi argomenti) invocate da un processo in esecuzione. È uno strumento di debug molto istruttivo che permette di ottenere, in tempo reale su schermo o in un file di testo, numerose informazioni sull'esecuzione di un programma.
 
 Può essere invocato in due modalità principali:
 
 1. `strace nomeprogramma [argomenti]` (esegue `nomeprogramma`)
-2. `strace -p <pid processo in esecuzione>` (visualizza le SVC invocate dal processo con il PID specificato, già in esecuzione ).
+2. `strace -p <pid processo in esecuzione>` (visualizza le SVC invocate dal processo con il PID specificato, già in esecuzione ).
 
-Per memorizzare su le la traccia delle system call invocate, utilizzare l'opzione `-o` : ad es. 
+Per memorizzare su le la traccia delle system call invocate, utilizzare l'opzione `-o` : ad es.
 
 ```bash
 strace -o traccialog.txt nomeprogramma
 ```
 
-
-Per ottenere la traccia delle system call invocate da un processo e dai suoi processi figli, utilizzare l'opzione `-f` : ad es. 
+Per ottenere la traccia delle system call invocate da un processo e dai suoi processi figli, utilizzare l'opzione `-f` : ad es.
 
 ```bash
 strace -f nomeprogramma
 ```
 
-Si tratta di una funzionalità molto importante, difficilmente ottenibile in un normale debugger che può soltanto seguire il processo padre oppure il processo glio (cfr. il comando ` set follow-fork-mode` di gdb).
+Si tratta di una funzionalità molto importante, difficilmente ottenibile in un normale debugger che può soltanto seguire il processo padre oppure il processo glio (cfr. il comando `set follow-fork-mode` di gdb).
 
 Per le altre opzioni consultare il manuale di `strace`.
 
----
+------
 
 ## 1. Chiamate di sistema per I/O
 
-Quando un programma viene messo in esecuzione, possiede almeno tre file descriptor:
+Quando un programma viene messo in esecuzione, possiede almeno tre file descriptor:
 
 ```c
 0 Standard input
@@ -77,7 +76,7 @@ Quando un programma viene messo in esecuzione, possiede almeno tre file descrip
 2 Standard error
 ```
 
-Vediamo le principali chiamate di sistema che fanno uso dei descrittori di file. La maggior parte di queste chiamate restituisce `-1` in caso di errore e assegna alla variabile `errno `il codice di errore. I codici di errore sono documentati nelle pagine di manuale delle singole chiamate di sistema e in quella di `errno`. La funzione `perror()` può essere utilizzata per visualizzare un messaggio di errore basato sul relativo codice.
+Vediamo le principali chiamate di sistema che fanno uso dei descrittori di file. La maggior parte di queste chiamate restituisce `-1` in caso di errore e assegna alla variabile `errno`il codice di errore. I codici di errore sono documentati nelle pagine di manuale delle singole chiamate di sistema e in quella di `errno`. La funzione `perror()` può essere utilizzata per visualizzare un messaggio di errore basato sul relativo codice.
 
 ### `write`
 
@@ -86,14 +85,14 @@ Vediamo le principali chiamate di sistema che fanno uso dei descrittori di file
 ssize_t write(int fd, const void *buf, size_t count);
 ```
 
-Dove: 
+Dove:
 
 - `fd`: file descriptor su cui effettuare la scrittura
 - `buf`: buffer che contiene il messaggio da andare a scrivere nel file descriptor indicato
 - `count`: numero di byte da andare a scrivere nel file descriptor
 
-Con la funzione `write()`, i primi `count` byte di `buf ` vengono scritti
-nel file che è stato associato al file descriptor `fd`. La chiamata restituisce il numero dei byte scritti oppure `-1` se si è verificato un errore.
+Con la funzione `write()`, i primi `count` byte di `buf` vengono scritti
+nel file che è stato associato al file descriptor `fd`. La chiamata restituisce il numero dei byte scritti oppure `-1` se si è verificato un errore.
 
 Per maggiori informazioni vedere [man 2 write](https://man7.org/linux/man-pages/man2/write.2.html).
 
@@ -104,7 +103,7 @@ Per maggiori informazioni vedere [man 2 write](https://man7.org/linux/man-pages/
 ssize_t read(int fd, void *buf, size_t count);
 ```
 
-Dove: 
+Dove:
 
 - `fd`: file descriptor su cui effettuare la lettura
 - `buf`: area di memoria in cui salvare i byte letti
@@ -230,7 +229,7 @@ Dove:
 - `oldfd`: file descriptor di cui eseguire la copia da inserire in tabella nel primo posto libero
 - `newfd`: file descriptor specificato dall'utente
 
-Le chiamate di sistema `dup()` e `dup2()` creano una copia del descrittore di file `oldfd`. Il nuovo descrittore è, nel caso della `dup()`, il descrittore non utilizzato con numero d'ordine più basso; nel caso della `dup2()`, è il `newfd` specificato dall'utente.
+Le chiamate di sistema `dup()` e `dup2()` creano una copia del descrittore di file `oldfd`. Il nuovo descrittore è, nel caso della `dup()`, il descrittore non utilizzato con numero d'ordine più basso; nel caso della `dup2()`, è il `newfd` specificato dall'utente.
 
 Per maggiori informazioni vedere [man 2 dup](https://man7.org/linux/man-pages/man2/dup.2.html) e [man 2 dup2](https://man7.org/linux/man-pages/man2/dup2.2.html).
 
@@ -243,7 +242,7 @@ int link(char *original_name, char *alias_name);
 int unlink(char *alias_name);
 ```
 
-Dove: 
+Dove:
 
 - `original_name`: file descriptor
 - `alias_name`: nome del link
@@ -252,7 +251,7 @@ La chiamata alla funzione `link()` crea un hard link al file `fd`. La chiamata a
 
 Per maggiori informazioni vedere [man 2 link](https://man7.org/linux/man-pages/man2/link.2.html) e [man 2 dup2](https://man7.org/linux/man-pages/man2/unlink.2.html).
 
----
+------
 
 ## 2. Controllo dei processi
 
@@ -272,12 +271,12 @@ Per fare eseguire operazioni diverse a padre e figlio si usa fare:
 ```c
 if((pid = fork())==0)
 {
-	//PROCESSO FIGLIO
-	...
+ //PROCESSO FIGLIO
+ ...
 } else
 {
-	// PROCESSO PADRE
-	...
+ // PROCESSO PADRE
+ ...
 }
 ```
 
@@ -311,7 +310,7 @@ La chiamata alla funzione `exit()` chiude tutti i file aperti, per il processo c
 
 Per maggiori informazioni vedere [man 2 exit](https://man7.org/linux/man-pages/man2/exit.2.html).
 
-### `wait ` e `waitpid`
+### `wait` e `waitpid`
 
 ```c
 #include <sys/wait.h>
@@ -327,10 +326,10 @@ Dove:
 - `pid`: pid del processo che si vuole attendere che termini (se `pid = -1` si attende la terminazione di un qualunque processo)
 - `options`: opzioni (di default `0`)
 
-La primitiva `wait()` attende la terminazione di un qualunque processo figlio. Se il processo figlio termina con una `exit()` il secondo byte meno significativo di status è pari all'argomento passato alla `exit()` e il byte meno significativo è zero.
+La primitiva `wait()` attende la terminazione di un qualunque processo figlio. Se il processo figlio termina con una `exit()` il secondo byte meno significativo di status è pari all'argomento passato alla `exit()` e il byte meno significativo è zero.
 
 La primitiva `waitpid()` sospende l'esecuzione del processo chiamante
-finchè il processo figlio identificato da `pid` termina. Se un processo figlio è già terminato al momento dell'invocazione di `waitpid`, essa ritorna immediatamente. 
+finchè il processo figlio identificato da `pid` termina. Se un processo figlio è già terminato al momento dell'invocazione di `waitpid`, essa ritorna immediatamente.
 
 Le primitive ritornano il pid del processo figlio terminato.
 
@@ -377,19 +376,19 @@ int execvp( const char *file, char *const argv[]);
 
 Per maggiori informazioni vedere [man 2 execve](https://man7.org/linux/man-pages/man2/execve.2.html).
 
----
+------
 
 ## 3. Segnali
 
-Vi sono spesso eventi importanti da noticare ai processi:
+Vi sono spesso eventi importanti da noticare ai processi:
 
 - tasti speciali sul terminale (es. Ctrl^c)
 - eccezioni hardware (ad es. accesso invalido alla memoria o divisione per 0)
 - eventi inviati con primitiva/comando kill (es. kill -9 1221 )
 - condizioni software (es. scadenza di un timer)
 
-L'arrivo di tali eventi asincroni può richiedere un'immediata gestione da parte del processo. Il sistema operativo UNIX consente l'invio e la ricezione di segnali per la sincronizzazione tra processi con due principali modalità principali : una gestione tradizionale e limitata, detta inaffidabile perchè può causare la perdita di segnali inviati, e una più sosticata, detta affidabile. Si suggerisce di consultare la pagina di manuale generale dedicata ai segnali UNIX eseguendo il comando [man 7 signal](https://man7.org/linux/man-pages/man7/signal.7.html).
-L'interfaccia semplicata signal è definita nello standard ANSI C e in alcune versioni di UNIX (ma non in Linux) può contribuire ad una gestione inaffidabile dei segnali, ed è quindi raccomandato l'uso della `sigaction`.
+L'arrivo di tali eventi asincroni può richiedere un'immediata gestione da parte del processo. Il sistema operativo UNIX consente l'invio e la ricezione di segnali per la sincronizzazione tra processi con due principali modalità principali : una gestione tradizionale e limitata, detta inaffidabile perchè può causare la perdita di segnali inviati, e una più sosticata, detta affidabile. Si suggerisce di consultare la pagina di manuale generale dedicata ai segnali UNIX eseguendo il comando [man 7 signal](https://man7.org/linux/man-pages/man7/signal.7.html).
+L'interfaccia semplicata signal è definita nello standard ANSI C e in alcune versioni di UNIX (ma non in Linux) può contribuire ad una gestione inaffidabile dei segnali, ed è quindi raccomandato l'uso della `sigaction`.
 
 ### `signal`
 
@@ -458,7 +457,7 @@ Per maggiori informazioni vedere [man 2 alarm](https://man7.org/linux/man-pages/
 unsigned int pause(void)
 ```
 
-La funzione pause sospende il processo chiamante fino alla ricezione di un segnale.
+La funzione pause sospende il processo chiamante fino alla ricezione di un segnale.
 
 Per maggiori informazioni vedere [man 2 pause](https://man7.org/linux/man-pages/man2/pause.2.html).
 
@@ -491,8 +490,8 @@ Dove:
   ```c
   struct timespec
   {
-  	time_t tv_sec; /* seconds */
-  	long tv_nsec; /* nanoseconds */
+   time_t tv_sec; /* seconds */
+   long tv_nsec; /* nanoseconds */
   };
   ```
 
@@ -520,15 +519,13 @@ Dove:
 
   ```c
   struct sigaction {
-  	void     (*sa_handler)(int);
+   void     (*sa_handler)(int);
       void     (*sa_sigaction)(int, siginfo_t *, void *);
       sigset_t   sa_mask;
       int        sa_flags;
       void     (*sa_restorer)(void);
   };
   ```
-
-  
 
 - `oldact`: struttura dati di tipo `sigaction`
 
@@ -560,7 +557,7 @@ Per maggiori informazioni vedere [man 2 sigprogcmask](https://man7.org/linux/man
 ### Esempio di gestione affidabile dei segnali
 
 La gestione affidabile dei segnali è più complessa di quella inaffidabile, ma fortunatamente segue uno schema alquanto ricorrente.
-Come argomenti delle primitive si utilizzano delle maschere di signali (tipo di dato `sigset_t`), ovvero un insieme di bit, ognuno associato ad un tipo di segnale, che possono essere accesi o spenti. Per accendere o spegnere questi bit si utilizzano le funzioni `sigemptyset`, `sigaddset`, `sigllset`ecc. (vederne il manuale). Con
+Come argomenti delle primitive si utilizzano delle maschere di signali (tipo di dato `sigset_t`), ovvero un insieme di bit, ognuno associato ad un tipo di segnale, che possono essere accesi o spenti. Per accendere o spegnere questi bit si utilizzano le funzioni `sigemptyset`, `sigaddset`, `sigllset`ecc. (vederne il manuale). Con
 
 ```c
 sigemptyset(&zeromask);
@@ -573,25 +570,25 @@ Per preparare l'azione del processo all'arrivo di un determinato segnale (in que
 sigemptyset(&action.sa_mask);
 ```
 
-Poi si indica nel campo `sa_handler` la funzione da eseguire all'arrivo del segnale, ovvero l'handler definito nel codice del programma.
+Poi si indica nel campo `sa_handler` la funzione da eseguire all'arrivo del segnale, ovvero l'handler definito nel codice del programma.
 
 ```c
 action.sa_handler = catcher;
 ```
 
-Il campo `sa_flags` va solitamente posto a zero. 
+Il campo `sa_flags` va solitamente posto a zero.
 
 ```c
 action.sa_flags = 0;
 ```
 
-Infine l'azione va "comunicata" al sistema operativo, indicando a quale segnale associare l'azione. La condizione sul valore di ritorno della `sigaction` serve a vericare che l'operazione sia andata a buon fine.
+Infine l'azione va "comunicata" al sistema operativo, indicando a quale segnale associare l'azione. La condizione sul valore di ritorno della `sigaction` serve a vericare che l'operazione sia andata a buon fine.
 
 ```c
 if (sigaction(SIGUSR1, &action, NULL) == -1)
 ```
 
-Ci sono casi in cui è necessario in certe fasi del processo bloccare l'arrivo dei segnali, per poi riattivarlo quando il processo diventa pronto alla ricezione. Per specicare quali segnali non devono essere noticati al processo (e rimanere pendenti), si procede preparando una maschera di segnali vuota...
+Ci sono casi in cui è necessario in certe fasi del processo bloccare l'arrivo dei segnali, per poi riattivarlo quando il processo diventa pronto alla ricezione. Per specicare quali segnali non devono essere noticati al processo (e rimanere pendenti), si procede preparando una maschera di segnali vuota...
 
 ```c
 sigemptyset(&set);
@@ -647,13 +644,13 @@ int main()
     struct sigaction sig, osig;
     sigset_t sigmask, oldmask, zeromask;
     
-    sig.sa_handler= catcher;	//assegnamento della funzione per la gestione del segnale
-    sigemptyset(&sig.sa_mask);	//preparazione di una maschera vuota
-    sig.sa_flags= 0;	//impostazione dei flags a 0
-    sigemptyset(&zeromask);	//preparazione di una maschera vuota
-    sigemptyset(&sigmask);	//preparazione di una maschera vuota
+    sig.sa_handler= catcher; //assegnamento della funzione per la gestione del segnale
+    sigemptyset(&sig.sa_mask); //preparazione di una maschera vuota
+    sig.sa_flags= 0; //impostazione dei flags a 0
+    sigemptyset(&zeromask); //preparazione di una maschera vuota
+    sigemptyset(&sigmask); //preparazione di una maschera vuota
     sigaddset(&sigmask, SIGUSR1); //aggiunta alla maschera del segnale da notificare
-    sigprocmask(SIG_BLOCK, &sigmask, &oldmask);	//maschera di blocco dei segnali
+    sigprocmask(SIG_BLOCK, &sigmask, &oldmask); //maschera di blocco dei segnali
     sigaction(SIGUSR1, &sig, &osig); /* il figlio la ereditera' */
     
     if ((pid=fork()) < 0) {
@@ -661,31 +658,31 @@ int main()
         exit(1);
     }
     else
-    	if (pid == 0) {
-   			/* Processo figlio */
-    		ppid = getppid();
-    		printf("figlio: mio padre e' %d\n", ppid);
-    		while(1) {
-    			sleep(1);
-    			kill(ppid, SIGUSR1);	//invio dei segnale
-    			/* Sblocca il segnale SIGUSR1 e lo attende */
-    			sigsuspend(&zeromask);	//sospensione con maschera vuota
-    		}
-    	}
-    	else {
-    		/* Processo padre */
-    		printf("padre: mio figlio e' %d\n", pid);
-    		while(1) {
-    			/* Sblocca il segnale SIGUSR1 e lo attende */
-    			sigsuspend(&zeromask); //sospensione con maschera vuota
-    			sleep(1);
-    			kill(pid, SIGUSR1); //invio del segnale
-			}
-		}
+     if (pid == 0) {
+      /* Processo figlio */
+      ppid = getppid();
+      printf("figlio: mio padre e' %d\n", ppid);
+      while(1) {
+       sleep(1);
+       kill(ppid, SIGUSR1); //invio dei segnale
+       /* Sblocca il segnale SIGUSR1 e lo attende */
+       sigsuspend(&zeromask); //sospensione con maschera vuota
+      }
+     }
+     else {
+      /* Processo padre */
+      printf("padre: mio figlio e' %d\n", pid);
+      while(1) {
+       /* Sblocca il segnale SIGUSR1 e lo attende */
+       sigsuspend(&zeromask); //sospensione con maschera vuota
+       sleep(1);
+       kill(pid, SIGUSR1); //invio del segnale
+   }
+  }
 }
 ```
 
----
+------
 
 ## 4. Pipe
 
@@ -701,32 +698,32 @@ Dove:
 
 Le pipe sono canali di comunicazioni unidirezionali che costituiscono un primo strumento di comunicazione basato sullo scambio di messaggi. La chiamata alla funzione `pipe()` genere due file descriptor, uno per la lettura e uno per la scrittura, operazioni che possono essere eseguite mediante `read` e `write` rispettivamente.
 
-Il buffer associato ad ogni pipe ha una dimensione finita (`PIPE_BUF`). Se un processo cerca di scrivere (`write()` system call) su una pipe il cui buffer è pieno il processo viene bloccato dal sistema operativo finchè il buffer non viene liberato attraverso una operazione di lettura (`read()` system call). Se il buffer è vuoto e un processo cerca di leggere da una pipe, il processo viene bloccato finchè non avviene una operazione di scrittura. 
+Il buffer associato ad ogni pipe ha una dimensione finita (`PIPE_BUF`). Se un processo cerca di scrivere (`write()` system call) su una pipe il cui buffer è pieno il processo viene bloccato dal sistema operativo finchè il buffer non viene liberato attraverso una operazione di lettura (`read()` system call). Se il buffer è vuoto e un processo cerca di leggere da una pipe, il processo viene bloccato finchè non avviene una operazione di scrittura.
 
-Un processo padre può comunicare con un processo figlio attraverso una pipe in quanto il processo figlio possiede
-una copia dei file descriptor del padre.
+Un processo padre può comunicare con un processo figlio attraverso una pipe in quanto il processo figlio possiede
+una copia dei file descriptor del padre.
 
-Per convenzione le pipe vengono di norma utilizzate come canali di comunicazione unidirezionali. Se due processi richiedono un canale di comunicazione bidirezionale tipicamente si creano due pipe, ovvero una per ciascuna direzione, sebbene siano anche possibili utilizzi delle pipe più 
+Per convenzione le pipe vengono di norma utilizzate come canali di comunicazione unidirezionali. Se due processi richiedono un canale di comunicazione bidirezionale tipicamente si creano due pipe, ovvero una per ciascuna direzione, sebbene siano anche possibili utilizzi delle pipe più
 flessibili e meno ortodossi, prevedendo anche scrittori ed eventualmente lettori
 multipli sulla stessa pipe.
 
-#### Lettura e scrittura su pipe
+### Lettura e scrittura su pipe
 
 Le funzioni `read()` e `write()` sono solitamente da svolgere tra processi padre e figlio.
 
 ```c
 // Lettura su pipe
-close(pipe[1]); 	//chiusura del file descriptor di scrittura della pipe
-read(pipe[0], &buff, sizeof (int));	//lettura dal file descriptor 0 della pipe e inserimento del valore in buf
+close(pipe[1]);  //chiusura del file descriptor di scrittura della pipe
+read(pipe[0], &buff, sizeof (int)); //lettura dal file descriptor 0 della pipe e inserimento del valore in buf
 
 // Scrittura su pipe
-close(pipe[0]); 	//chiusura del file descriptor di lettura della pipe
-write(pipe[1], &buff, sizeof (int));	//scrittura dal file descriptor 0 della pipe e inserimento del valore in buf
+close(pipe[0]);  //chiusura del file descriptor di lettura della pipe
+write(pipe[1], &buff, sizeof (int)); //scrittura dal file descriptor 0 della pipe e inserimento del valore in buf
 ```
 
 Per maggiori informazioni vedere [man 7 pipe](https://man7.org/linux/man-pages/man7/pipe.7.html).
 
----
+------
 
 ## 5. FIFO
 
@@ -746,11 +743,11 @@ La chiamata alla funzione `mkfifo` crea un'entità nel file system accessibile d
 
 Per maggiori informazioni vedere [man 3 mkfifo](https://man7.org/linux/man-pages/man3/mkfifo.3.html).
 
----
+------
 
 ## 6. Socket
 
-Una socket fornisce una interfaccia di comunicazione tra processi che possono essere locali oppure trovarsi su nodi distinti di una rete. In generale ogni socket è identificata da un indirizzo, che nel caso specifico di socket create nel dominio di comunicazione AF_INET è una coppia (indirizzo IP del nodo, numero di porta).
+Una socket fornisce una interfaccia di comunicazione tra processi che possono essere locali oppure trovarsi su nodi distinti di una rete. In generale ogni socket è identificata da un indirizzo, che nel caso specifico di socket create nel dominio di comunicazione AF_INET è una coppia (indirizzo IP del nodo, numero di porta).
 
 Per l'esecuzione del server e del client (che devono essere scritti su due file `.c` differenti) eseguire il comando da terminale:
 
@@ -764,8 +761,6 @@ con `numero porta` un valore molto grande (sopra il 10000 va bene). Se si è cre
 ```bash
 telnet localhost <numero porta>
 ```
-
-
 
 ### `socket`
 
@@ -807,9 +802,9 @@ Nel dominio `AF_INET` le strutture dati utilizzate da bind e dalle altre primiti
 
 ```c
 struct sockaddr_in {
-    sa_family_t sin_family; 	/* address family: AF_INET */
-    u_int16_t sin_port; 		/* port in network byte order */
-    struct in_addr sin_addr; 	/* internet address */
+    sa_family_t sin_family;  /* address family: AF_INET */
+    u_int16_t sin_port;   /* port in network byte order */
+    struct in_addr sin_addr;  /* internet address */
 };
 ```
 
@@ -868,7 +863,7 @@ Per maggiori informazioni vedere [man 2 connect](https://man7.org/linux/man-page
 close(sock);
 ```
 
-Il protocollo TCP attende un tempo tra 1 e 4 minuti (nello stato `TIME_WAIT`) prima di rimuoverla effettivamente, al fine di assicurarsi che eventuali
+Il protocollo TCP attende un tempo tra 1 e 4 minuti (nello stato `TIME_WAIT`) prima di rimuoverla effettivamente, al fine di assicurarsi che eventuali
 pacchetti duplicati vaganti siano consegnati al destinatario. In alcuni casi questo ritardo può essere evitabile senza conseguenze, come nel caso del debug di un server che deve essere frequentemente terminato e rieseguito. A questo scopo si utilizza la `setsockopt` per forzare il riuso dell'indirizzo nel `bind` che quindi non fallirà anche in presenza di una socket in fase di chiusura e avente lo stesso indirizzo:
 
 ```c
@@ -903,10 +898,10 @@ La funzione `select()` permette di attendere una variazione di stato per i file 
 Macro utili per la manipolazioni delle variabili `fd_set`:
 
 ```c
-FD_ZERO(fd_set *set) 				//azzera un fd_set
-FD_CLR(int fd, fd_set *set) 		//rimuove un fd da un fd_set
-FD_SET(int fd, fd_set *set) 		//inserisce un fd in un fd_set
-FD_ISSET(int fd, fd_set *set) 		//predicato che verifica se un certo fd è membro di un fd_set
+FD_ZERO(fd_set *set)     //azzera un fd_set
+FD_CLR(int fd, fd_set *set)   //rimuove un fd da un fd_set
+FD_SET(int fd, fd_set *set)   //inserisce un fd in un fd_set
+FD_ISSET(int fd, fd_set *set)   //predicato che verifica se un certo fd è membro di un fd_set
 ```
 
 Per maggiori informazioni vedere [man 2 select](https://man7.org/linux/man-pages/man2/select.2.html).
@@ -942,8 +937,8 @@ main()
     sock= socket(AF_INET,SOCK_STREAM,0);
     if(sock<0)
     { 
-    	perror("opening stream socket");
-    	exit(1);
+     perror("opening stream socket");
+     exit(1);
     }
     server.sin_family = AF_INET;
     server.sin_addr.s_addr= INADDR_ANY;
@@ -951,15 +946,15 @@ main()
     
     if (bind(sock,(struct sockaddr *)&server,sizeof server)<0)
     {
-    	perror("binding stream socket");
-    	exit(2);
+     perror("binding stream socket");
+     exit(2);
     }
     length= sizeof server;
     
     if(getsockname(sock,(struct sockaddr *)&server,&length)<0)
     {
-    	perror("getting socket name");
-    	exit(3);
+     perror("getting socket name");
+     exit(3);
     }
     
     printf("Socket port #%d\n",ntohs(server.sin_port));
@@ -969,25 +964,25 @@ main()
     
     do {
     /* Attesa di una connessione */
-    	msgsock= accept(sock,(struct sockaddr *)&client,(int *)&length);
-    	if(msgsock ==-1)
-    	{ 
+     msgsock= accept(sock,(struct sockaddr *)&client,(int *)&length);
+     if(msgsock ==-1)
+     { 
             perror("accept"); 
             exit(4);
-    	}
-    	else
-    	{// SERVER CONCORRENTE
-    		if(fork()==0) {
-    			printf("Serving connection from %s, port %d\n",
-    			inet_ntoa(client.sin_addr), ntohs(client.sin_port));
-    			close(sock);
-    			ftpserv(msgsock);
-    			close(msgsock);
-    			exit(0);
-    		}
-    		else
-    			close(msgsock);
-    	}
+     }
+     else
+     {// SERVER CONCORRENTE
+      if(fork()==0) {
+       printf("Serving connection from %s, port %d\n",
+       inet_ntoa(client.sin_addr), ntohs(client.sin_port));
+       close(sock);
+       ftpserv(msgsock);
+       close(msgsock);
+       exit(0);
+      }
+      else
+       close(msgsock);
+     }
     } while(1);
 }
 
@@ -1009,25 +1004,25 @@ ftpserv(int sock)
     { 
         fprintf(stderr,"Non riesco ad aprire il file %s (%s)...uscita
    !\n",rich_mesg.filename,strerror(errno));
-    	risp_mesg.result = -1;
-    	strcpy(risp_mesg.errmsg,strerror(errno));
+     risp_mesg.result = -1;
+     strcpy(risp_mesg.errmsg,strerror(errno));
     }
     else {
-    	risp_mesg.result= 0;
-    	fstat(fd,&fbuf); /* Ottiene la dimensione del file */
-    	risp_mesg.filesize= fbuf.st_size;
+     risp_mesg.result= 0;
+     fstat(fd,&fbuf); /* Ottiene la dimensione del file */
+     risp_mesg.filesize= fbuf.st_size;
     }
     /* Invio della risposta */
     if((rval = write(sock,&risp_mesg,sizeof(RISPOSTA_MSG)))<0)
-    	perror("writing on stream socket");
+     perror("writing on stream socket");
     if(risp_mesg.result != 0) return -1;
-    	do {
-    		if((nread = read(fd,buf,sizeof buf))<0)
-    			perror("reading from file");
-    		if (nread >0)
-    			if((rval = write(sock,buf,nread))<0)
-    				perror("writing on stream socket");
-    	} while(nread > 0);
+     do {
+      if((nread = read(fd,buf,sizeof buf))<0)
+       perror("reading from file");
+      if (nread >0)
+       if((rval = write(sock,buf,nread))<0)
+        perror("writing on stream socket");
+     } while(nread > 0);
 }
 ```
 
@@ -1058,23 +1053,23 @@ int argc;char *argv[];
     RISPOSTA_MSG risp_mesg;
     
     if(argc != 4) {
-    	fprintf(stderr,"Uso: %s servername porta nomefile\n\n",argv[0]);
-    	exit(-1);
+     fprintf(stderr,"Uso: %s servername porta nomefile\n\n",argv[0]);
+     exit(-1);
     }
     /* Crea una socket di tipo STREAM per il dominio TCP/IP */
     sock= socket(AF_INET,SOCK_STREAM,0);
     if(sock<0)
     {
-    	perror("opening stream socket");
-    	exit(1);
+     perror("opening stream socket");
+     exit(1);
     }
         /* Ottiene l'indirizzo del server */
     server.sin_family= AF_INET;
     hp= gethostbyname(argv[1]);
     
     if(hp==0){
-    	fprintf(stderr,"%s: unknown host",argv[1]);
-    	exit(2);
+     fprintf(stderr,"%s: unknown host",argv[1]);
+     exit(2);
     }
     memcpy( (char *)&server.sin_addr, (char *)hp->h_addr ,hp->h_length);
     /* La porta e' sulla linea di comando */
@@ -1094,32 +1089,32 @@ int argc;char *argv[];
     
     /* Riceve la RISPOSTA dal server */
     if((rval = read(sock,&risp_mesg,sizeof(RISPOSTA_MSG)))<0)
-    	perror("reading server answer");
+     perror("reading server answer");
     if(risp_mesg.result !=0) {
-    	fprintf(stderr,"OOPS il server risponde %d (%s)...uscita!\n",risp_mesg.result,risp_mesg.errmsg);
-    	close(sock);
-    	exit(0);
+     fprintf(stderr,"OOPS il server risponde %d (%s)...uscita!\n",risp_mesg.result,risp_mesg.errmsg);
+     close(sock);
+     exit(0);
     }
                 
     strcpy(copiafilename,"copia.");
     strcat(copiafilename, rich_mesg.filename);
     if((fd= open(copiafilename,O_WRONLY|O_CREAT|O_TRUNC,0644))<0) {
-    	fprintf(stderr,"Non posso aprire il file copia %s ...uscita!\n",copiafilename);
-    	close(sock);
+     fprintf(stderr,"Non posso aprire il file copia %s ...uscita!\n",copiafilename);
+     close(sock);
         exit(0);
     }
                 
     s=0;
                 
     do{
-    	if((rval = read(sock,buf,sizeof buf))<0)
-    		perror("reading stream message");
-    	if(rval >0)
-    	{
-    		write(fd,buf,rval);
-    		putchar('.');
-    		s += rval;
-    	}
+     if((rval = read(sock,buf,sizeof buf))<0)
+      perror("reading stream message");
+     if(rval >0)
+     {
+      write(fd,buf,rval);
+      putchar('.');
+      s += rval;
+     }
     }while(rval !=0);
                 
     printf("\nTrasferimento completato di %s completato - ricevuti %d byte (dimensione sul server %d\n",rich_mesg.filename,s, risp_mesg.filesize);
@@ -1128,4 +1123,3 @@ int argc;char *argv[];
     exit(0);
 }
 ```
-
